@@ -236,17 +236,17 @@ const ChatWidget = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg shadow-blue-500/25 flex items-center justify-center group overflow-hidden"
+        className="relative w-16 h-16 gradient-premium-multi text-white rounded-full shadow-premium-lg flex items-center justify-center group overflow-hidden hover-lift"
       >
         {/* Animated Background */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className="absolute inset-0 gradient-premium-purple opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         />
         
         <div className="relative z-10">
-          {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+          {isOpen ? <X size={26} /> : <MessageCircle size={26} />}
         </div>
 
         {/* Notification Badge */}
@@ -254,18 +254,18 @@ const ChatWidget = () => {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center"
+            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow-premium"
           >
-            <Sparkles size={10} className="text-white" />
+            <Sparkles size={12} className="text-white" />
           </motion.div>
         )}
 
         {/* Pulse Effect */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{ opacity: 0.3 }}
+          className="absolute inset-0 gradient-premium-multi rounded-full"
+          animate={{ scale: [1, 1.4, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          style={{ opacity: 0.2 }}
         />
       </motion.button>
     </div>

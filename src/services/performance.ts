@@ -80,14 +80,17 @@ export class PerformanceService {
   }
 
   // Preload images for better performance
-  static preloadImages(urls: string[]): Promise<void[]> {
+  static preloadImages(urls: string[]): Promise<(void | Error)[]> {
     return Promise.all(
       urls.map(url => 
-        new Promise<void>((resolve, reject) => {
+        new Promise<void | Error>((resolve) => {
           const img = new Image();
           img.onload = () => resolve();
-          img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+          img.onerror = () => resolve(new Error(`Failed to load image: ${url}`));
           img.src = url;
+          
+          // Timeout after 5 seconds
+          setTimeout(() => resolve(new Error(`Image load timeout: ${url}`)), 5000);
         })
       )
     );
@@ -119,32 +122,108 @@ export class PerformanceService {
 
   // Monitor Core Web Vitals
   static monitorWebVitals(): void {
+    // Only monitor in development
+    if (process.env.NODE_ENV !== 'development') return;
+
     // Largest Contentful Paint
-    new PerformanceObserver((entryList) => {
-      const entries = entryList.getEntries();
-      const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
-    }).observe({ entryTypes: ['largest-contentful-paint'] });
+    try {
+      new PerformanceObserver((entryList) => {
+        const entries = entryList.getEntries();
+        const lastEntry = entries[entries.length - 1];
+        console.log('LCP:', Math.round(lastEntry.startTime), 'ms');
+      }).observe({ entryTypes: ['largest-contentful-paint'] });
+    } catch (e) {
+      console.warn('LCP monitoring not supported');
+    }
 
     // First Input Delay
-    new PerformanceObserver((entryList) => {
-      const entries = entryList.getEntries();
-      entries.forEach((entry) => {
-        console.log('FID:', entry.processingStart - entry.startTime);
-      });
-    }).observe({ entryTypes: ['first-input'] });
+    try {
+      new PerformanceObserver((entryList) => {
+        const entries = entryList.getEntries();
+        entries.forEach((entry: any) => {
+          console.log('FID:', Math.round(entry.processingStart - entry.startTime), 'ms');
+        });
+      }).observe({ entryTypes: ['first-input'] });
+    } catch (e) {
+      console.warn('FID monitoring not supported');
+    }
 
     // Cumulative Layout Shift
-    new PerformanceObserver((entryList) => {
-      let clsValue = 0;
-      const entries = entryList.getEntries();
-      entries.forEach((entry: any) => {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
-        }
-      });
-      console.log('CLS:', clsValue);
-    }).observe({ entryTypes: ['layout-shift'] });
+    try {
+      new PerformanceObserver((entryList) => {
+        let clsValue = 0;
+        const entries = entryList.getEntries();
+        entries.forEach((entry: any) => {
+          if (!entry.hadRecentInput) {
+            clsValue += entry.value;
+          }
+        });
+        console.log('CLS:', Math.round(clsValue * 1000) / 1000);
+      }).observe({ entryTypes: ['layout-shift'] });
+    } catch (e) {
+      console.warn('CLS monitoring not supported');
+    }
+  }
+
+  // Optimize images for performance
+  static optimizeImage(url: string, width?: number, height?: number): string {
+    if (url.includes('unsplash.com') || url.includes('pexels.com')) {
+      const params = new URLSearchParams();
+      if (width) params.set('w', width.toString());
+      if (height) params.set('h', height.toString());
+      params.set('auto', 'compress');
+      params.set('cs', 'tinysrgb');
+      params.set('fit', 'crop');
+      
+      return `${url}?${params.toString()}`;
+    }
+    return url;
+  }
+
+  // Lazy load components
+  static createIntersectionObserver(
+    callback: (entries: IntersectionObserverEntry[]) => void,
+    options?: IntersectionObserverInit
+  ): IntersectionObserver {
+    return new IntersectionObserver(callback, {
+      rootMargin: '50px',
+      threshold: 0.1,
+      ...options,
+    });
+  }
+
+  // Memory management
+  static cleanupUnusedResources(): void {
+    // Clear unused images from memory
+    const images = document.querySelectorAll('img[data-loaded="true"]');
+    images.forEach((img: any) => {
+      if (!img.getBoundingClientRect().top < window.innerHeight + 1000) {
+        img.src = '';
+        img.removeAttribute('data-loaded');
+      }
+    });
+  }
+
+  // Performance budget monitoring
+  static checkPerformanceBudget(): void {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    const loadTime = navigation.loadEventEnd - navigation.fetchStart;
+    
+    if (loadTime > 3000) {
+      console.warn(`Page load time exceeded budget: ${Math.round(loadTime)}ms`);
+    }
+    
+    // Check bundle size
+    const resources = performance.getEntriesByType('resource');
+    const jsSize = resources
+      .filter((r: any) => r.name.includes('.js'))
+      .reduce((total: number, r: any) => total + (r.transferSize || 0), 0);
+    
+    if (jsSize > 500000) { // 500KB budget
+      console.warn(`JavaScript bundle size exceeded budget: ${Math.round(jsSize / 1024)}KB`);
+    }
   }
 }
 

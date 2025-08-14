@@ -9,31 +9,36 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
   size = 'md', 
-  color = 'text-blue-500',
+  color = 'text-blue-400',
   text 
 }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-16 h-16'
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-2">
+    <div className="flex flex-col items-center justify-center space-y-4">
       <motion.div
-        className={`${sizeClasses[size]} border-2 border-current border-t-transparent rounded-full ${color}`}
+        className={`${sizeClasses[size]} border-3 rounded-full ${color} premium-spinner`}
         animate={{ rotate: 360 }}
         transition={{
-          duration: 1,
+          duration: 1.2,
           repeat: Infinity,
           ease: "linear"
+        }}
+        style={{
+          borderColor: 'currentColor',
+          borderTopColor: 'transparent'
         }}
       />
       {text && (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-sm text-gray-400"
+          transition={{ delay: 0.3 }}
+          className="text-base text-gray-300 font-medium"
         >
           {text}
         </motion.p>
